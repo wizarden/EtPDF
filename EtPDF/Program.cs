@@ -61,15 +61,35 @@ namespace EtPDF
             string PDFName = values["pdfname"].ToString();
             Console.WriteLine(PDFName);
 
+            string znaki = @"C:\Users\User\Desktop\znaki.pdf";
+            string svlogo = @"C:\Users\User\Desktop\svlogo.pdf";
+
+            PdfReader reader;
+
             using (PdfWriter writer = PdfWriter.GetInstance(document, new FileStream(PDFName, FileMode.Create)))
             {
                 document.Open();
+
+
+
+
                 cb = writer.DirectContent;
+                PdfImportedPage page;
+                reader = new PdfReader(znaki);
+                page = writer.GetImportedPage(reader, 1);
+                cb.AddTemplate(page, 0, 0);
+                
+                reader = new PdfReader(svlogo);
+                page = writer.GetImportedPage(reader, 1);
+                cb.AddTemplate(page, 0, 20);
 
-               // addRectangle(50, 50, 50, 50, 1);
-               // addRoundRectangle(50, 50, 100, 100, 1, 5);
 
-               // addText("AAAAAA", 50, 50, 50, 20f, 45);
+
+
+                // addRectangle(50, 50, 50, 50, 1);
+                // addRoundRectangle(50, 50, 100, 100, 1, 5);
+
+                // addText("AAAAAA", 50, 50, 50, 20f, 45);
                 addBorderText("ФАСАД ВЕРХ", 5, 100, 200, 100, 50f, false);
                 //addBorderText("ФАСАД ВЕРХ", 5, 130, 200, 100, 50f, true);
 
