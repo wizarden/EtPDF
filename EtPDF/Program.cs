@@ -27,10 +27,20 @@ namespace EtPDF
         }
         static void Main(string[] args)
         {
-            string json = String.Join(" ", args);   //args[0];
-            Console.WriteLine(json);
+            string PDFName = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + @"\my.pdf"; ;
 
-            var values = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+            if (args.Length > 0)
+            {
+                string json = String.Join(" ", args);
+                Console.WriteLine(json);
+                var values = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+                if (values.ContainsKey("pdfname"))
+                    PDFName = values["pdfname"].ToString();
+            }
+
+
+           
+
 
             int wi = Convert.ToInt32(210 / 25.4 * 72);
             int he = Convert.ToInt32(297 / 25.4 * 72);
@@ -58,12 +68,8 @@ namespace EtPDF
             document = new Document(pgSize, 0f, 0f, 0f, 0f);
 
             
-            string PDFName = values["pdfname"].ToString();
-            Console.WriteLine(PDFName);
-
-            string znaki = @"C:\Users\User\Desktop\znaki.pdf";
-            string svlogo = @"C:\Users\User\Desktop\svlogo.pdf";
-
+          
+           
             PdfReader reader;
 
             using (PdfWriter writer = PdfWriter.GetInstance(document, new FileStream(PDFName, FileMode.Create)))
@@ -75,16 +81,17 @@ namespace EtPDF
 
                 cb = writer.DirectContent;
                 PdfImportedPage page;
-                reader = new PdfReader(znaki);
+
+                reader = new PdfReader(Properties.Resources.znaki);
                 page = writer.GetImportedPage(reader, 1);
                 cb.AddTemplate(page, 0, 0);
                 
-                reader = new PdfReader(svlogo);
+                reader = new PdfReader(Properties.Resources.svlogo);
                 page = writer.GetImportedPage(reader, 1);
-                cb.AddTemplate(page, 0, 20);
+                cb.AddTemplate(page, 0, 50);
 
-
-
+                
+                //Properties.Resources.svlogo
 
                 // addRectangle(50, 50, 50, 50, 1);
                 // addRoundRectangle(50, 50, 100, 100, 1, 5);
