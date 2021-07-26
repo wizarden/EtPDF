@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
 using System.IO;
+using PdfiumViewer;
+using System.Drawing.Printing;
 
 
 //https://docs.microsoft.com/ru-ru/troubleshoot/windows-client/shell-experience/command-line-string-limitation#:~:text=%D0%BD%D0%BE%D0%BC%D0%B5%D1%80%20%D0%9A%D0%91%3A%20830473-,%D0%94%D0%BE%D0%BF%D0%BE%D0%BB%D0%BD%D0%B8%D1%82%D0%B5%D0%BB%D1%8C%D0%BD%D1%8B%D0%B5%20%D1%81%D0%B2%D0%B5%D0%B4%D0%B5%D0%BD%D0%B8%D1%8F,%D0%BA%D0%BE%D0%BC%D0%B0%D0%BD%D0%B4%D0%BD%D0%B0%D1%8F%20%D1%81%D1%82%D1%80%D0%BE%D0%BA%D0%B0
@@ -15,6 +17,65 @@ namespace EtPDF
 {
     class Program
     {
+
+
+
+        public static bool PrintPDF(string printer, int wi, int he, string filename, int copies)
+        {
+            
+            try
+            {
+                printer = Console.ReadLine();
+
+                    using (var document = PdfiumViewer.PdfDocument.Load(filename))
+                    {
+                        using (var printDocument = document.CreatePrintDocument(PdfPrintMode.CutMargin))
+                        {
+
+                        try
+                        {
+                            
+
+                            printDocument.PrinterSettings.PrinterName = printer;
+                            printDocument.OriginAtMargins = true;
+                           
+
+                            PaperSize paperSize = new PaperSize("Test", (int)(wi/0.254), (int)(he/0.254));
+                            //paperSize.RawKind = (int)PaperKind.Custom;
+                            printDocument.PrinterSettings.DefaultPageSettings.PaperSize = paperSize;
+                            printDocument.DefaultPageSettings.PaperSize = paperSize;
+                            printDocument.PrinterSettings.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
+                            printDocument.DefaultPageSettings.Margins = new Margins(0, 0, 0, 0);
+
+
+
+                            printDocument.PrintController = new StandardPrintController();
+                            Console.WriteLine(">>" + printDocument.PrinterSettings.DefaultPageSettings);
+                            //printDocument.Print();
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                        }
+
+                    }
+                    }
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+        }
+
+
+        //------------------------------------------------------------------------------------------------------------
+        //------------------------------------------------------------------------------------------------------------
+        //------------------------------------------------------------------------------------------------------------
+        //------------------------------------------------------------------------------------------------------------
+
+
+
         static Document document;
         static BaseFont TimesNewRomanBase;
         static BaseFont TimesNewRomanBaseBold;
@@ -27,8 +88,11 @@ namespace EtPDF
         }
         static void Main(string[] args)
         {
-            string PDFName = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + @"\my.pdf"; ;
 
+            consPrinterName();
+
+            string PDFName = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + @"\my.pdf"; ;
+            
             if (args.Length > 0)
             {
                 string json = String.Join(" ", args);
@@ -42,8 +106,8 @@ namespace EtPDF
            
 
 
-            int wi = Convert.ToInt32(210 / 25.4 * 72);
-            int he = Convert.ToInt32(297 / 25.4 * 72);
+            int wi = Convert.ToInt32(150 / 25.4 * 72);
+            int he = Convert.ToInt32(28 / 25.4 * 72);
 
 
             //------------------------------------------------------------------------------------------------------------
@@ -70,49 +134,74 @@ namespace EtPDF
             
           
            
-            PdfReader reader;
+            //PdfReader reader;
 
             using (PdfWriter writer = PdfWriter.GetInstance(document, new FileStream(PDFName, FileMode.Create)))
             {
                 document.Open();
-
-
-
-
                 cb = writer.DirectContent;
-                PdfImportedPage page;
 
-                reader = new PdfReader(Properties.Resources.znaki);
-                page = writer.GetImportedPage(reader, 1);
-                cb.AddTemplate(page, 0, 0);
-                
-                reader = new PdfReader(Properties.Resources.svlogo);
-                page = writer.GetImportedPage(reader, 1);
-                cb.AddTemplate(page, 0, 50);
-
-                
-                //Properties.Resources.svlogo
-
-                // addRectangle(50, 50, 50, 50, 1);
-                // addRoundRectangle(50, 50, 100, 100, 1, 5);
-
-                // addText("AAAAAA", 50, 50, 50, 20f, 45);
-                addBorderText("ФАСАД ВЕРХ", 5, 100, 200, 100, 50f, false);
-                //addBorderText("ФАСАД ВЕРХ", 5, 130, 200, 100, 50f, true);
-
-
-                addWrapText("ИП Стеклянников В.М., Юр.адрес: Россия, 440045 г.Пенза, ул.Ладожская 155 - 77.Производство: Россия, 440015, г.Пенза, ул.Аустрина, д. 164.Хранить в крытых"
-                    + "помещениях при температуре не ниже 10°С и отн. влажности воздуха от 40% до 60%. Гарант. срок эксплуатации-3 года. Срок службы-15 лет.ГОСТ 16371-2014,ГОСТ 19917-2014"
-                    + "ТР ТС 025/2012, Декларация о соответствии ЕАЭС №RU Д-RU.РА01.B.58427/21, срок действия по 04.05.2026 г."
-                    , 5, 5 , 200, 30, 7f);
+                addRoundRectangle(1, 1, 148, 26, 0.5, 3);
+                addEAN13("2520439000412", 2, 2, 30, 20);
+                document.NewPage();
+                addRoundRectangle(1, 1, 148, 26, 0.5, 3);
+                addEAN13("2520439000412", 2, 2, 30, 20);
+                document.NewPage();
+                addRoundRectangle(1, 1, 148, 26, 0.5, 3);
+                addEAN13("2520439000412", 2, 2, 30, 20);
+                document.NewPage();
+                addRoundRectangle(1, 1, 148, 26, 0.5, 3);
+                addEAN13("2520439000412", 2, 2, 30, 20);
+                document.NewPage();
+                addRoundRectangle(1, 1, 148, 26, 0.5, 3);
+                addEAN13("2520439000412", 2, 2, 30, 20);
+                document.NewPage();
+                addRoundRectangle(1, 1, 148, 26, 0.5, 3);
+                addEAN13("2520439000412", 2, 2, 30, 20);
+                document.NewPage();
+                addRoundRectangle(1, 1, 148, 26, 0.5, 3);
+                addEAN13("2520439000412", 2, 2, 30, 20);
+               
 
 
-                addEAN13("2520439000412", 10,50, 1.5f);
+                //addWrapText("ИП Стеклянников В.М., Юр.адрес: Россия, 440045 г.Пенза, ул.Ладожская 155 - 77.Производство: Россия, 440015, г.Пенза, ул.Аустрина, д. 164.Хранить в крытых"
+                //    + "помещениях при температуре не ниже 10°С и отн. влажности воздуха от 40% до 60%. Гарант. срок эксплуатации-3 года. Срок службы-15 лет.ГОСТ 16371-2014,ГОСТ 19917-2014"
+                //    + "ТР ТС 025/2012, Декларация о соответствии ЕАЭС №RU Д-RU.РА01.B.58427/21, срок действия по 04.05.2026 г."
+                //    , 10, 2, 190, 5, 5f);
+
+
+                //PdfImportedPage page;
+
+                //addResourcesPDF(writer, Properties.Resources.znaki, 0, 0, 105, 105);
+
+
+
+                //reader = new PdfReader(Properties.Resources.svlogo);                
+                //page = writer.GetImportedPage(reader, 1);
+                //cb.AddTemplate(page, 2, 0, 0, 2, 50, 100);
+
+
+                ////Properties.Resources.svlogo
+
+                //// addRectangle(50, 50, 50, 50, 1);
+                //// addRoundRectangle(50, 50, 100, 100, 1, 5);
+
+                //// addText("AAAAAA", 50, 50, 50, 20f, 45);
+                //addBorderText("ФАСАД ВЕРХ", 5, 100, 200, 100, 50f, false);
+                ////addBorderText("ФАСАД ВЕРХ", 5, 130, 200, 100, 50f, true);
+
+
+
+
+
+                //addEAN13("2520439000412", 10,50, 1.5f);
 
                 document.Close();
                 writer.Close();
 
             }
+
+            PrintPDF("NPIAE4A8A (HP LaserJet M402n)", 28, 150, PDFName, 1);
 
 
             Console.WriteLine(PageSize.A4.Width);
@@ -132,7 +221,16 @@ namespace EtPDF
         ///////////////////////////////////
 
 
+        static void addResourcesPDF(PdfWriter writer, byte[] templatePDF, int x, int y, int w, int h)
+        {
+            PdfReader reader = new PdfReader(templatePDF);
+            PdfImportedPage page = writer.GetImportedPage(reader, 1);
 
+            cb.AddTemplate(page, (w / page.Width) / 25.4 * 72, 0, 0, (h / page.Height) / 25.4 * 72, x, y);
+            Console.WriteLine("---" + page.Width);
+            Console.WriteLine("---" + page.Height);
+
+        }
 
         static void addRectangle(int x, int y, int w, int h, int border)
         {
@@ -141,9 +239,9 @@ namespace EtPDF
             cb.Stroke();
         }
 
-        static void addRoundRectangle(int x, int y, int w, int h, int border, int radius)
+        static void addRoundRectangle(int x, int y, int w, int h, double border, double radius)
         {
-            cb.SetLineWidth(mm(border));
+            cb.SetLineWidth(border/24.5*72);        
             cb.RoundRectangle(mm(x), mm(y), mm(w), mm(h), mm(radius));
             cb.Stroke();
         }
@@ -220,6 +318,57 @@ namespace EtPDF
             document.Add(imageEAN);
 
 
+        }
+
+
+        static void addEAN13(string cod, int x, int y, int w, int h)
+        {
+
+            BarcodeEAN ean = new BarcodeEAN
+            {
+                CodeType = Barcode.EAN13,
+                Code = cod,
+                Font = TimesNewRomanBase
+            };
+
+            Image imageEAN = ean.CreateImageWithBarcode(cb, null, null);
+            //float eanw = imageEAN.Width;
+            //float eanh = imageEAN.Height;
+            //Console.WriteLine(eanw / eanh); //2,372018
+
+            imageEAN.ScaleAbsolute(mm(w), mm(h));
+
+            imageEAN.SetAbsolutePosition(mm(x), mm(y));
+            document.Add(imageEAN);
+
+
+        }
+
+        static void consPrinterName()
+        {
+             PrinterSettings printer = new PrinterSettings();
+             foreach (var item in PrinterSettings.InstalledPrinters)
+             {
+                Console.WriteLine(item);
+                Console.WriteLine("------------------");
+                //consPaperName(item.ToString());
+                //Console.WriteLine();
+             }
+        }
+
+
+        static void consPaperName(string printer)
+        {
+
+            var printerSettings = new PrinterSettings
+            {
+                PrinterName = printer              
+            };
+
+            foreach (PaperSize paperSize in printerSettings.PaperSizes)
+            {
+                Console.WriteLine(paperSize.PaperName);
+            }
         }
 
     }
