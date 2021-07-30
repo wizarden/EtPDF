@@ -20,9 +20,13 @@ namespace EtPDF
 
 
 
+
+
+
+
         public static bool PrintPDF(string printer, string paperName, int wi, int he, string filename, int copies)
         {
-
+            
             try
             {
                 //printer = Console.ReadLine();
@@ -49,24 +53,24 @@ namespace EtPDF
 
                             foreach (PaperSize paperSize in printerSettings.PaperSizes)
                             {
-                                
+
                                 if (paperSize.PaperName == paperName)
                                 {
                                     Console.WriteLine("+++");
                                     printDocument.PrinterSettings.DefaultPageSettings.PaperSize = paperSize;
                                     printDocument.PrinterSettings.DefaultPageSettings.Landscape = false; ////??? 
-                                    
+
 
                                     //PaperSize paperSize = new PaperSize("Test", (int)(wi / 0.254), (int)(he / 0.254));
                                     printDocument.DefaultPageSettings.PaperSize.RawKind = (int)PaperKind.Custom;
-                                    
+
                                     printDocument.PrinterSettings.DefaultPageSettings.Margins = new Margins(50, 50, 50, 50);
                                     printDocument.DefaultPageSettings.Margins = new Margins(50, 50, 50, 50);
                                     break;
                                 }
                             }
 
-                            
+
 
 
 
@@ -102,11 +106,11 @@ namespace EtPDF
         //------------------------------------------------------------------------------------------------------------
 
 
-            
+
         static Document document;
         static BaseFont TimesNewRomanBase;
         static BaseFont TimesNewRomanBaseBold;
-        static PdfContentByte cb;        
+        static PdfContentByte cb;
         static int OX = 0, OY = 0;
         const int wmargin = 1;
 
@@ -128,6 +132,7 @@ namespace EtPDF
         static string sertifikatdata = "";
         static string data = "";
         static int print = 0;
+        static int razmer = 9;
         static Dictionary<string, object> d;
 
 
@@ -135,46 +140,55 @@ namespace EtPDF
         {
             return (int)Math.Round(t * 72 / 25.4);
         }
-       
+
         static void Main(string[] args)
         {
-            consPrinterName();
+            //consPrinterName();
+          
 
             if (args.Length > 0)
             {
-                string json = String.Join(" ", args).Replace(@"\'", "\"");
-                Console.WriteLine(json);
+                //init JSON STRING
+                {
+                    string json = String.Join(" ", args).Replace(@"\'", "\"");
+                    Console.WriteLine(json);
+                    d = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+                    if (d.ContainsKey("pdfname")) PDFName = d["pdfname"].ToString();
+                    if (d.ContainsKey("barcode")) barcode = d["barcode"].ToString();
+                    if (d.ContainsKey("title")) title = d["title"].ToString();
+                    if (d.ContainsKey("name")) name = d["name"].ToString();
+                    if (d.ContainsKey("modul")) modul = d["modul"].ToString();
+                    if (d.ContainsKey("color")) color = d["color"].ToString();
+                    if (d.ContainsKey("up")) up = d["up"].ToString();
+                    if (d.ContainsKey("ups")) ups = d["ups"].ToString();
+                    if (d.ContainsKey("typeup")) typeup = d["typeup"].ToString();
+                    if (d.ContainsKey("furn")) furn = (bool)d["furn"];
+                    if (d.ContainsKey("packer")) packer = d["packer"].ToString();
+                    if (d.ContainsKey("upcol")) upcol = Convert.ToInt32(d["upcol"]);
+                    if (d.ContainsKey("trademark")) trademark = d["trademark"].ToString();
+                    if (d.ContainsKey("garant")) garant = d["garant"].ToString();
+                    if (d.ContainsKey("regnum")) regnum = d["regnum"].ToString();
+                    if (d.ContainsKey("sertifikatdata")) sertifikatdata = d["sertifikatdata"].ToString();
+                    if (d.ContainsKey("data")) data = d["data"].ToString();
+                    if (d.ContainsKey("print")) print = Convert.ToInt32(d["print"]);
+                    if (d.ContainsKey("razmer")) razmer = Convert.ToInt32(d["razmer"]);
+                }
 
-                d = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
-                if (d.ContainsKey("pdfname")) PDFName = d["pdfname"].ToString();
-                if (d.ContainsKey("barcode")) barcode = d["barcode"].ToString();
-                if (d.ContainsKey("title")) title = d["title"].ToString();
-                if (d.ContainsKey("name")) name = d["name"].ToString();
-                if (d.ContainsKey("modul")) modul = d["modul"].ToString();               
-                if (d.ContainsKey("color")) color = d["color"].ToString();               
-                if (d.ContainsKey("up")) up = d["up"].ToString();               
-                if (d.ContainsKey("ups")) ups = d["ups"].ToString();               
-                if (d.ContainsKey("typeup")) typeup = d["typeup"].ToString();               
-                if (d.ContainsKey("furn")) furn = (bool)d["furn"];
-                if (d.ContainsKey("packer")) packer = d["packer"].ToString();
-                if (d.ContainsKey("upcol")) upcol = Convert.ToInt32(d["upcol"]);
-                if (d.ContainsKey("trademark")) trademark = d["trademark"].ToString();
-                if (d.ContainsKey("garant")) garant = d["garant"].ToString();
-                if (d.ContainsKey("regnum")) regnum = d["regnum"].ToString();
-                if (d.ContainsKey("sertifikatdata")) sertifikatdata = d["sertifikatdata"].ToString();
-                if (d.ContainsKey("data")) data = d["data"].ToString();
-                if (d.ContainsKey("print")) print = Convert.ToInt32(d["print"]);
-
-                
             }
-           
+
 
             Console.WriteLine(PDFName);
             //Console.ReadKey();
 
+
             float wi = (float)(90 / 25.4 * 72);
             float he = (float)(70 / 25.4 * 72);
-            
+            if (razmer == 9)
+            {
+                wi = (float)(210 / 25.4 * 72);
+                he = (float)(297 / 25.4 * 72);
+            }
+
             //-------------------------------------------------------------------------------------------------------------
             string t = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "times.TTF");
             TimesNewRomanBase = BaseFont.CreateFont(t, BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
@@ -191,77 +205,35 @@ namespace EtPDF
 
 
 
-            //PdfReader reader;
 
             using (PdfWriter writer = PdfWriter.GetInstance(document, new FileStream(PDFName, FileMode.Create)))
             {
                 document.Open();
                 cb = writer.DirectContent;
-
-                addRoundRectangle(1, 1, 88, 68, 0.5, 3);
-                addResourcesPDF(writer, Properties.Resources.svlogo, 2, 56, 50, 9);
-                addEAN13(barcode, 55, 52, 31, 15);
-
-                if (title.Length > 50)
+                for (int i = 0; i < 4; i++)
                 {
-                    addWrapText(title, 1, 44, 88, 10, 4);     
+                    OX = 10; OY = 5 + i * mm(72);
+                    E90X60(writer);
+                    OX = mm(100); OY = 5 + i * mm(72);
+                    E90X60(writer);
                 }
-                else
-                {
-                    addText(title, 3, 44, 85, 5, 0, Element.ALIGN_CENTER);                                       
-                }
-
-                addText(name, 3, 36, 84, 10, 0, Element.ALIGN_CENTER, TimesNewRomanBaseBold);
-                addText(modul, 3, 29, 84, 8, 0, Element.ALIGN_CENTER);
-                addText(color, 3, 16, 84, 10, 0, Element.ALIGN_CENTER, TimesNewRomanBaseBold);
-                addRectangle(2, 14, 86, 12, 0.8);
-                addText(up + "/" + ups, 3, 5, 20, 10, 0, Element.ALIGN_CENTER, TimesNewRomanBaseBold);
-                addRectangle(2, 3, 22, 10, 0.2);
-                addText(packer, 26, 5, 30, 8, 0, Element.ALIGN_CENTER, TimesNewRomanBaseBold);
-                addText(data, 58, 5, 30, 10, 0, Element.ALIGN_CENTER, TimesNewRomanBaseBold);
-                addRectangle(57, 3, 31, 10, 0.2);
-
-
-                //addWrapText("ИП Стеклянников В.М., Юр.адрес: Россия, 440045 г.Пенза, ул.Ладожская 155 - 77.Производство: Россия, 440015, г.Пенза, ул.Аустрина, д. 164.Хранить в крытых"
-                //    + "помещениях при температуре не ниже 10°С и отн. влажности воздуха от 40% до 60%. Гарант. срок эксплуатации-3 года. Срок службы-15 лет.ГОСТ 16371-2014,ГОСТ 19917-2014"
-                //    + "ТР ТС 025/2012, Декларация о соответствии ЕАЭС №RU Д-RU.РА01.B.58427/21, срок действия по 04.05.2026 г."
-                //    , 10, 2, 190, 5, 5f);
-
-
-                //PdfImportedPage page;
-
-                //addResourcesPDF(writer, Properties.Resources.znaki, 0, 0, 105, 105);
-
-
-
-                //reader = new PdfReader(Properties.Resources.svlogo);                
-                //page = writer.GetImportedPage(reader, 1);
-                //cb.AddTemplate(page, 2, 0, 0, 2, 50, 100);
-
-
-                ////Properties.Resources.svlogo
-
-                //// addRectangle(50, 50, 50, 50, 1);
-                //// addRoundRectangle(50, 50, 100, 100, 1, 5);
-
-                //// addText("AAAAAA", 50, 50, 50, 20f, 45);
-                //addBorderText("ФАСАД ВЕРХ", 5, 100, 200, 100, 50f, false);
-                ////addBorderText("ФАСАД ВЕРХ", 5, 130, 200, 100, 50f, true);
-
-
-                //addEAN13("2520439000412", 10,50, 1.5f);
-
                 document.Close();
                 writer.Close();
-
             }
+
+
+
+
             // принтер -- имя бумаги -- ширина бумаги -- высота бумаги -- имя файла -- количество копий
-            //PrintPDF("NPIAE4A8A (HP LaserJet M402n)", "A4", 28, 150, PDFName, 1);
-            //PrintPDF("Microsoft Print to PDF", "A4", 28, 150, PDFName, 1);
+            // PrintPDF("NPIAE4A8A (HP LaserJet M402n)", "A4", 28, 150, PDFName, 1);
+
+
+            if (print == 1) PrintPDF("NPIAE4A8A (HP LaserJet M402n)", "A4", 28, 150, PDFName, 1);
+           // if (print == 1) PrintPDF("Microsoft Print to PDF", "A4", 28, 150, PDFName, 1);
 
 
 
-           //Console.ReadLine();
+            // Console.ReadLine();
 
 
 
@@ -299,7 +271,7 @@ namespace EtPDF
             cb.RoundRectangle(mm(x) + OX, mm(y) + OY, mm(w), mm(h), mm(radius));
             cb.Stroke();
         }
-        static void addText(string text, int x, int y, float w, float fontSize, int ug = 0, int align = Element.ALIGN_LEFT, BaseFont font=null, double border = 0)
+        static void addText(string text, int x, int y, float w, float fontSize, int ug = 0, int align = Element.ALIGN_LEFT, BaseFont font = null, double border = 0)
         {
             float ww = 0;
             cb.SetHorizontalScaling(100);
@@ -316,14 +288,14 @@ namespace EtPDF
                 ww = font.GetWidthPoint(text, fontSize);
             }
             Console.WriteLine(ww + " " + mm(ww) + " " + mm(w));
-            
+
 
             if (mm(ww) > mm(w)) cb.SetHorizontalScaling(w / ww * 100);
 
             if (align == Element.ALIGN_CENTER)
-                cb.ShowTextAligned(align, text, mm(x) + OX + mm(w)/2, mm(y) + OY, ug);
+                cb.ShowTextAligned(align, text, mm(x) + OX + mm(w) / 2, mm(y) + OY, ug);
             else
-                cb.ShowTextAligned(align, text, mm(x) + OX, mm(y) + OY, ug);            
+                cb.ShowTextAligned(align, text, mm(x) + OX, mm(y) + OY, ug);
             cb.EndText();
 
             //if (border > 0) { addRectangle(mm(x) + OX, mm(y) + OY, mm(w), 1, border); }
@@ -369,11 +341,11 @@ namespace EtPDF
 
 
             Font font = new iTextSharp.text.Font(TimesNewRomanBase, mm(f), Font.NORMAL);
-            
+
             Paragraph tp = new Paragraph(text, font);
             tp.Alignment = Element.ALIGN_CENTER;
             tp.SetLeading(1, 1);
-            
+
             ct.AddElement(tp);
             ct.Go();
         }
@@ -429,8 +401,8 @@ namespace EtPDF
             {
                 Console.WriteLine(item);
                 Console.WriteLine("------------------");
-                //consPaperName(item.ToString());
-                //Console.WriteLine();
+                consPaperName(item.ToString());
+                Console.WriteLine();
             }
         }
 
@@ -449,5 +421,70 @@ namespace EtPDF
             }
         }
 
+
+
+        static void E90X60(PdfWriter writer)
+        {
+           
+
+            addRoundRectangle(1, 1, 88, 68, 0.5, 3);
+            addResourcesPDF(writer, Properties.Resources.svlogo, 2, 56, 50, 9);
+            addEAN13(barcode, 55, 52, 31, 15);
+
+            if (title.Length > 50)
+            {
+                addWrapText(title, 1, 44, 88, 10, 4);
+            }
+            else
+            {
+                addText(title, 3, 45, 85, 5, 0, Element.ALIGN_CENTER);
+            }
+
+            addText(name, 3, 36, 84, 10, 0, Element.ALIGN_CENTER, TimesNewRomanBaseBold);
+            addText(modul, 3, 29, 84, 8, 0, Element.ALIGN_CENTER);
+            addText(color, 3, 16, 84, 10, 0, Element.ALIGN_CENTER, TimesNewRomanBaseBold);
+            addRectangle(2, 14, 86, 12, 0.8);
+            addText(up + "/" + ups, 3, 5, 20, 10, 0, Element.ALIGN_CENTER, TimesNewRomanBaseBold);
+            addRectangle(2, 3, 22, 10, 0.2);
+            addText(packer, 26, 5, 30, 8, 0, Element.ALIGN_CENTER, TimesNewRomanBaseBold);
+            addText(data, 58, 5, 30, 10, 0, Element.ALIGN_CENTER, TimesNewRomanBaseBold);
+            addRectangle(57, 3, 31, 10, 0.2);
+
+
+            //addWrapText("ИП Стеклянников В.М., Юр.адрес: Россия, 440045 г.Пенза, ул.Ладожская 155 - 77.Производство: Россия, 440015, г.Пенза, ул.Аустрина, д. 164.Хранить в крытых"
+            //    + "помещениях при температуре не ниже 10°С и отн. влажности воздуха от 40% до 60%. Гарант. срок эксплуатации-3 года. Срок службы-15 лет.ГОСТ 16371-2014,ГОСТ 19917-2014"
+            //    + "ТР ТС 025/2012, Декларация о соответствии ЕАЭС №RU Д-RU.РА01.B.58427/21, срок действия по 04.05.2026 г."
+            //    , 10, 2, 190, 5, 5f);
+
+
+            //PdfImportedPage page;
+
+            //addResourcesPDF(writer, Properties.Resources.znaki, 0, 0, 105, 105);
+
+
+
+            //reader = new PdfReader(Properties.Resources.svlogo);                
+            //page = writer.GetImportedPage(reader, 1);
+            //cb.AddTemplate(page, 2, 0, 0, 2, 50, 100);
+
+
+            ////Properties.Resources.svlogo
+
+            //// addRectangle(50, 50, 50, 50, 1);
+            //// addRoundRectangle(50, 50, 100, 100, 1, 5);
+
+            //// addText("AAAAAA", 50, 50, 50, 20f, 45);
+            //addBorderText("ФАСАД ВЕРХ", 5, 100, 200, 100, 50f, false);
+            ////addBorderText("ФАСАД ВЕРХ", 5, 130, 200, 100, 50f, true);
+
+
+            //addEAN13("2520439000412", 10,50, 1.5f);
+
+
+        }
+
+    
+    
+    
     }
 }
