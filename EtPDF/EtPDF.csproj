@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Resources\phm.pdf" />
     <None Include="Resources\svlogo.pdf" />
     <None Include="Resources\znaki.pdf" />
   </ItemGroup>

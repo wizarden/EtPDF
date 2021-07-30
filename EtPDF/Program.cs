@@ -96,17 +96,18 @@ namespace EtPDF
         }
 
 
-        //------------------------------------------------------------------------------------------------------------
-        //------------------------------------------------------------------------------------------------------------
-        //------------------------------------------------------------------------------------------------------------
+        //------------------------------------------------------------------------------------------------------------phm 20x13
+        //------------------------------------------------------------------------------------------------------------svlogo 50x9
+        //------------------------------------------------------------------------------------------------------------znaki 15x19
         //------------------------------------------------------------------------------------------------------------
 
 
-
+            
         static Document document;
         static BaseFont TimesNewRomanBase;
         static BaseFont TimesNewRomanBaseBold;
-        static PdfContentByte cb;
+        static PdfContentByte cb;        
+        static int OX = 0, OY = 0;
         const int wmargin = 1;
 
         static string PDFName = Path.GetTempPath() + "my.pdf";
@@ -156,21 +157,23 @@ namespace EtPDF
                 if (d.ContainsKey("typeup")) typeup = d["typeup"].ToString();               
                 if (d.ContainsKey("furn")) furn = (bool)d["furn"];
                 if (d.ContainsKey("packer")) packer = d["packer"].ToString();
-                if (d.ContainsKey("upcol")) upcol = (int)d["upcol"];
+                if (d.ContainsKey("upcol")) upcol = Convert.ToInt32(d["upcol"]);
                 if (d.ContainsKey("trademark")) trademark = d["trademark"].ToString();
                 if (d.ContainsKey("garant")) garant = d["garant"].ToString();
                 if (d.ContainsKey("regnum")) regnum = d["regnum"].ToString();
                 if (d.ContainsKey("sertifikatdata")) sertifikatdata = d["sertifikatdata"].ToString();
                 if (d.ContainsKey("data")) data = d["data"].ToString();
-                if (d.ContainsKey("print")) print = (int)d["print"];
-            }
+                if (d.ContainsKey("print")) print = Convert.ToInt32(d["print"]);
 
+                
+            }
+           
 
             Console.WriteLine(PDFName);
             //Console.ReadKey();
 
-            float wi = (float)(210 / 25.4 * 72);
-            float he = (float)(297 / 25.4 * 72);
+            float wi = (float)(90 / 25.4 * 72);
+            float he = (float)(70 / 25.4 * 72);
             
             //-------------------------------------------------------------------------------------------------------------
             string t = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "times.TTF");
@@ -195,20 +198,29 @@ namespace EtPDF
                 document.Open();
                 cb = writer.DirectContent;
 
-                addRoundRectangle(1, 1, 148, 26, 0.5, 3);
-                addEAN13(barcode, 2, 2, 30, 15);
-                addText("Привет", 2, 2, 40, 10);
-                
-                document.NewPage();
-                addRoundRectangle(1, 1, 148, 26, 0.5, 3);
-                addEAN13(barcode, 2, 2, 30, 15);
-                addText("Hello", 2, 2, 40, 10);
+                addRoundRectangle(1, 1, 88, 68, 0.5, 3);
+                addResourcesPDF(writer, Properties.Resources.svlogo, 2, 56, 50, 9);
+                addEAN13(barcode, 55, 52, 31, 15);
 
+                if (title.Length > 50)
+                {
+                    addWrapText(title, 1, 44, 88, 10, 4);     
+                }
+                else
+                {
+                    addText(title, 3, 44, 85, 5, 0, Element.ALIGN_CENTER);                                       
+                }
 
-                document.NewPage();
-                addRoundRectangle(1, 1, 148, 26, 0.5, 3);
-                addEAN13(barcode, 2, 2, 30, 15);
-                addText("Hello", 2, 2, 40, 10);
+                addText(name, 3, 36, 84, 10, 0, Element.ALIGN_CENTER, TimesNewRomanBaseBold);
+                addText(modul, 3, 29, 84, 8, 0, Element.ALIGN_CENTER);
+                addText(color, 3, 16, 84, 10, 0, Element.ALIGN_CENTER, TimesNewRomanBaseBold);
+                addRectangle(2, 14, 86, 12, 0.8);
+                addText(up + "/" + ups, 3, 5, 20, 10, 0, Element.ALIGN_CENTER, TimesNewRomanBaseBold);
+                addRectangle(2, 3, 22, 10, 0.2);
+                addText(packer, 26, 5, 30, 8, 0, Element.ALIGN_CENTER, TimesNewRomanBaseBold);
+                addText(data, 58, 5, 30, 10, 0, Element.ALIGN_CENTER, TimesNewRomanBaseBold);
+                addRectangle(57, 3, 31, 10, 0.2);
+
 
                 //addWrapText("ИП Стеклянников В.М., Юр.адрес: Россия, 440045 г.Пенза, ул.Ладожская 155 - 77.Производство: Россия, 440015, г.Пенза, ул.Аустрина, д. 164.Хранить в крытых"
                 //    + "помещениях при температуре не ниже 10°С и отн. влажности воздуха от 40% до 60%. Гарант. срок эксплуатации-3 года. Срок службы-15 лет.ГОСТ 16371-2014,ГОСТ 19917-2014"
@@ -268,35 +280,57 @@ namespace EtPDF
             PdfReader reader = new PdfReader(templatePDF);
             PdfImportedPage page = writer.GetImportedPage(reader, 1);
 
-            cb.AddTemplate(page, (w / page.Width) / 25.4 * 72, 0, 0, (h / page.Height) / 25.4 * 72, x, y);
+            cb.AddTemplate(page, (w / page.Width) / 25.4 * 72, 0, 0, (h / page.Height) / 25.4 * 72, mm(x) + OX, mm(y) + OY);
             Console.WriteLine("---" + page.Width);
             Console.WriteLine("---" + page.Height);
 
         }
 
-        static void addRectangle(int x, int y, int w, int h, int border)
+        static void addRectangle(int x, int y, int w, int h, double border)
         {
             cb.SetLineWidth(mm(border));
-            cb.Rectangle(mm(x), mm(y), mm(w), mm(h));
+            cb.Rectangle(mm(x) + OX, mm(y) + OY, mm(w), mm(h));
             cb.Stroke();
         }
 
         static void addRoundRectangle(int x, int y, int w, int h, double border, double radius)
         {
             cb.SetLineWidth(border / 24.5 * 72);
-            cb.RoundRectangle(mm(x), mm(y), mm(w), mm(h), mm(radius));
+            cb.RoundRectangle(mm(x) + OX, mm(y) + OY, mm(w), mm(h), mm(radius));
             cb.Stroke();
         }
-        static void addText(string text, int x, int y, float w, float fontSize, int ug = 0)
-
+        static void addText(string text, int x, int y, float w, float fontSize, int ug = 0, int align = Element.ALIGN_LEFT, BaseFont font=null, double border = 0)
         {
-            float ww = TimesNewRomanBase.GetWidthPoint(text, fontSize);
+            float ww = 0;
+            cb.SetHorizontalScaling(100);
             cb.BeginText();
-            cb.SetFontAndSize(TimesNewRomanBase, mm(fontSize));
-            if (ww > w) cb.SetHorizontalScaling(w / ww * 100);
-            cb.ShowTextAligned(Element.ALIGN_LEFT, text, mm(x), mm(y), ug);
+
+            if (font == null)
+            {
+                cb.SetFontAndSize(TimesNewRomanBase, mm(fontSize));
+                ww = TimesNewRomanBase.GetWidthPoint(text, fontSize);
+            }
+            else
+            {
+                cb.SetFontAndSize(font, mm(fontSize));
+                ww = font.GetWidthPoint(text, fontSize);
+            }
+            Console.WriteLine(ww + " " + mm(ww) + " " + mm(w));
+            
+
+            if (mm(ww) > mm(w)) cb.SetHorizontalScaling(w / ww * 100);
+
+            if (align == Element.ALIGN_CENTER)
+                cb.ShowTextAligned(align, text, mm(x) + OX + mm(w)/2, mm(y) + OY, ug);
+            else
+                cb.ShowTextAligned(align, text, mm(x) + OX, mm(y) + OY, ug);            
             cb.EndText();
+
+            //if (border > 0) { addRectangle(mm(x) + OX, mm(y) + OY, mm(w), 1, border); }
+
+            cb.SetHorizontalScaling(100);
         }
+
 
         static void addBorderText(string text, int x, int y, int w, int h, float fontSize, bool bold = false, int ug = 0)
 
@@ -318,10 +352,10 @@ namespace EtPDF
 
 
 
-            cb.ShowTextAligned(Element.ALIGN_CENTER, text, mm(x) + mm(w) / 2, mm(y) + mm(h / 2) - mm(fontSize / 3), ug);
+            cb.ShowTextAligned(Element.ALIGN_CENTER, text, mm(x) + mm(w) / 2 + OX, mm(y) + mm(h / 2) - mm(fontSize / 3) + OY, ug);
             cb.EndText();
 
-            addRectangle(x, y, w, h, 1);
+            addRectangle(x + OX, y + OY, w, h, 1);
 
 
             cb.SetHorizontalScaling(100);
@@ -330,14 +364,16 @@ namespace EtPDF
 
         static void addWrapText(string text, int x, int y, int w, int h, float f)
         {
-
             ColumnText ct = new ColumnText(cb);
-            ct.SetSimpleColumn(new Rectangle(mm(x), mm(y), mm(x + w), mm(y + h)));
+            ct.SetSimpleColumn(mm(x) + OX, mm(y) + OY, mm(x) + mm(w) + OX, mm(y) + mm(h) + OY);
 
-            Font font = new iTextSharp.text.Font(TimesNewRomanBase, f, Font.NORMAL);
 
+            Font font = new iTextSharp.text.Font(TimesNewRomanBase, mm(f), Font.NORMAL);
+            
             Paragraph tp = new Paragraph(text, font);
+            tp.Alignment = Element.ALIGN_CENTER;
             tp.SetLeading(1, 1);
+            
             ct.AddElement(tp);
             ct.Go();
         }
@@ -356,7 +392,7 @@ namespace EtPDF
             float eanh = imageEAN.Height;
 
             imageEAN.ScaleAbsolute(eanw * k, eanh * k);
-            imageEAN.SetAbsolutePosition(mm(x), mm(y));
+            imageEAN.SetAbsolutePosition(mm(x) + OX, mm(y) + OY);
             document.Add(imageEAN);
 
 
@@ -380,7 +416,7 @@ namespace EtPDF
 
             imageEAN.ScaleAbsolute(mm(w), mm(h));
 
-            imageEAN.SetAbsolutePosition(mm(x), mm(y));
+            imageEAN.SetAbsolutePosition(mm(x) + OX, mm(y) + OY);
             document.Add(imageEAN);
 
 
